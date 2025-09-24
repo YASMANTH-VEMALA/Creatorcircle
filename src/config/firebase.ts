@@ -1,0 +1,54 @@
+import { initializeApp, getApp, getApps } from 'firebase/app';
+import { getAuth, Auth } from 'firebase/auth';
+import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
+import { getFunctions } from 'firebase/functions';
+
+// Your web app's Firebase configuration (hard-coded as requested)
+const firebaseConfig = {
+  apiKey: 'AIzaSyAjfvtu9SjMtjZd1Kut82SimykK7GZIreM',
+  authDomain: 'demoproject-13b80.firebaseapp.com',
+  projectId: 'demoproject-13b80',
+  storageBucket: 'demoproject-13b80.firebasestorage.app',
+  messagingSenderId: '744259896450',
+  appId: '1:744259896450:web:85ee43637dda003ae8e09b',
+  measurementId: 'G-38MLN40P23'
+};
+
+// Initialize Firebase app (force reinitialize to ensure correct config)
+let app;
+try {
+  // Try to get existing app first
+  app = getApp();
+  console.log('🔄 Using existing Firebase app');
+} catch (error) {
+  // If no app exists, create new one
+  app = initializeApp(firebaseConfig);
+  console.log('🆕 Created new Firebase app');
+}
+
+// Initialize Firebase Auth with React Native persistence.
+// If Auth was already initialized (due to Fast Refresh), fall back to getAuth.
+let authInstance: Auth;
+try {
+  authInstance = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage),
+  });
+} catch (e) {
+  authInstance = getAuth(app);
+}
+
+export const auth = authInstance;
+
+// Initialize Firestore
+export const db = getFirestore(app);
+
+// Initialize Firebase Storage
+export const storage = getStorage(app);
+
+// Initialize Firebase Functions
+export const functions = getFunctions(app);
+
+export default app;
