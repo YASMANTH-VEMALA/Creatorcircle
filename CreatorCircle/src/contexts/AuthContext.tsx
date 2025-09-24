@@ -1,0 +1,83 @@
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { User as FirebaseUser, onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from '../config/firebase';
+import { User } from '../types';
+import { xpService } from '../services/xpService';
+import { NotificationPermissionService } from '../services/notificationPermissionService';
+import { locationService } from '../services/locationService';
+
+interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+  logout: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  loading: true,
+  logout: async () => {},
+});
+
+export const useAuth = () => useContext(AuthContext);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const logout = async () => {
+    try {
+      // Stop background sharing and remove user location if logged in
+      const current = auth.currentUser;
+      if (current?.uid) {
+        try {
+          await locationService.disableSharing(current.uid);
+        } catch (e) {
+          console.warn('Failed to stop location sharing on logout:', e);
+        }
+      }
+      await signOut(auth);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        const appUser: User = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email || '',
+        };
+        setUser(appUser);
+        
+        // Award daily login XP (handled with daily limit in service)
+        try {
+          await xpService.awardForDailyLogin(appUser.uid);
+        } catch (e) {
+          console.warn('Daily login XP award failed:', e);
+        }
+
+        // Request notification permissions after successful login
+        try {
+          // Small delay to ensure user sees the login success
+          setTimeout(async () => {
+            await NotificationPermissionService.requestNotificationPermissions(appUser.uid);
+          }, 1000);
+        } catch (e) {
+          console.warn('Notification permission request failed:', e);
+        }
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  return (
+    <AuthContext.Provider value={{ user, loading, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}; 

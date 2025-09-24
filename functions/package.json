@@ -1,0 +1,24 @@
+{
+  "name": "creatorcircle-functions",
+  "engines": {
+    "node": "18"
+  },
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "deploy": "npm run build && firebase deploy --only functions",
+    "serve": "npm run build && firebase emulators:start --only functions"
+  },
+  "dependencies": {
+    "@google-cloud/language": "^6.0.0",
+    "@google-cloud/vision": "^4.0.0",
+    "firebase-admin": "^12.0.0",
+    "firebase-functions": "^4.5.0",
+    "google-auth-library": "^10.2.1",
+    "nodemailer": "^6.9.0"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^7.0.1",
+    "typescript": "^5.4.0"
+  }
+}
