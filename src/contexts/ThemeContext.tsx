@@ -24,6 +24,8 @@ interface ThemeContextType {
     info: string;
     accent: string;
     accentLight: string;
+    skeletonBackground: string;
+    skeletonHighlight: string;
   };
 }
 
@@ -50,6 +52,8 @@ const lightColors = {
   info: '#17a2b8',
   accent: '#6f42c1',
   accentLight: '#e9ecef',
+  skeletonBackground: '#f0f0f0',
+  skeletonHighlight: '#e0e0e0',
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);

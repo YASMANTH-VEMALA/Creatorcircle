@@ -14,9 +14,11 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
+import { useNetwork } from '../contexts/NetworkContext';
 import { notificationService } from '../services/notificationService';
 import { collaborationService } from '../services/collaborationService';
 import NotificationPostModal from '../components/NotificationPostModal';
+import NotificationSkeleton from '../components/skeletons/NotificationSkeleton';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface NotificationItem {
@@ -47,6 +49,7 @@ interface CollaborationRequest {
 
 const NotificationsScreen: React.FC = () => {
   const { user } = useAuth();
+  const { isOffline } = useNetwork();
   const navigation = useNavigation();
   
   // State management
@@ -476,6 +479,26 @@ const NotificationsScreen: React.FC = () => {
     </View>
   );
 
+  const renderSkeletonLoading = () => (
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="#000" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Notifications</Text>
+        <View style={styles.headerRight} />
+      </View>
+      
+      <FlatList
+        data={[1, 2, 3, 4, 5, 6, 7, 8]} // Render 8 skeleton items
+        renderItem={() => <NotificationSkeleton />}
+        keyExtractor={(item) => `skeleton-${item}`}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContainer}
+      />
+    </SafeAreaView>
+  );
+
   const renderLoadingState = () => (
     <View style={styles.loadingContainer}>
       <ActivityIndicator size="large" color="#007AFF" />
@@ -483,12 +506,16 @@ const NotificationsScreen: React.FC = () => {
     </View>
   );
 
-  if (loading) {
+  if (loading && !isOffline) {
+    return renderSkeletonLoading();
+  }
+
+  if (loading && isOffline) {
     return renderLoadingState();
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Notifications</Text>
       </View>
@@ -544,7 +571,8 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: 'white',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 60,
+    paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
     shadowColor: '#000',

@@ -4,7 +4,9 @@ import { Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { ThemeProvider } from './src/contexts/ThemeContext';
+import { NetworkProvider } from './src/contexts/NetworkContext';
 import AppNavigator from './src/navigation/AppNavigator';
+import OfflineIndicator from './src/components/OfflineIndicator';
 import { UserService } from './src/services/userService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { locationService } from './src/services/locationService';
@@ -296,14 +298,14 @@ const PushRegistration: React.FC = () => {
     return () => {
       if (subscription && Notifications) {
         try {
-          Notifications.removeNotificationSubscription(subscription);
+          subscription.remove();
         } catch (error) {
           console.warn('Error removing notification subscription:', error);
         }
       }
       if (responseListener.current && Notifications) {
         try {
-          Notifications.removeNotificationSubscription(responseListener.current);
+          responseListener.current.remove();
         } catch (error) {
           console.warn('Error removing response listener:', error);
         }
@@ -374,11 +376,14 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <AuthProvider>
-          <PushRegistration />
-          <AppNavigator />
-          <StatusBar style="auto" />
-        </AuthProvider>
+        <NetworkProvider>
+          <AuthProvider>
+            <PushRegistration />
+            <AppNavigator />
+            <OfflineIndicator />
+            <StatusBar style="auto" />
+          </AuthProvider>
+        </NetworkProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

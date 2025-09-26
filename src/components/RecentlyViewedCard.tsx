@@ -74,18 +74,18 @@ const RecentlyViewedCard: React.FC<RecentlyViewedCardProps> = ({
               <View style={styles.avatarContainer}>
                 <Avatar
                   size="medium"
-                  source={profile.profilePhotoUrl}
-                  fallback={profile.name.charAt(0).toUpperCase()}
+                  source={profile.profilePhotoUrl || ''}
+                  fallback={profile.name ? profile.name.charAt(0).toUpperCase() : 'U'}
                   verified={false}
                 />
               </View>
               
               <View style={styles.textContainer}>
                 <Text style={styles.name} numberOfLines={1}>
-                  {profile.name}
+                  {profile.name || 'Unknown User'}
                 </Text>
                 <Text style={styles.college} numberOfLines={1}>
-                  {profile.college}
+                  {profile.college || 'Unknown College'}
                 </Text>
                 <Text style={styles.timeAgo}>
                   {formatTimeAgo(profile.viewedAt)}

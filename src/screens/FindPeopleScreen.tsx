@@ -16,12 +16,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
+import { useNetwork } from '../contexts/NetworkContext';
 import { useNavigation } from '@react-navigation/native';
 import { Profile } from '../types';
 import { collaborationService } from '../services/collaborationService';
 import { UserService } from '../services/userService';
 import { ProfileValidationService } from '../services/profileValidationService';
 import LoadingScreen from '../components/LoadingScreen';
+import UserCardSkeleton from '../components/skeletons/UserCardSkeleton';
 import { ImageUtils } from '../utils/imageUtils';
 import { Avatar } from '../components/ui/Avatar';
 import { SearchHistoryService, ViewedProfile } from '../services/searchHistoryService';
@@ -32,6 +34,7 @@ const { width: screenWidth } = Dimensions.get('window');
 
 const FindPeopleScreen: React.FC = () => {
   const { user } = useAuth();
+  const { isOffline } = useNetwork();
   const navigation = useNavigation();
   const { notifyScroll } = useScroll();
   const [users, setUsers] = useState<Profile[]>([]);
@@ -97,11 +100,43 @@ const FindPeopleScreen: React.FC = () => {
       
       const usersData: Profile[] = [];
       querySnapshot.forEach((doc) => {
-        const userData = { 
-          id: doc.id, 
-          uid: doc.id, // Ensure uid is set to document ID
-          ...doc.data() 
-        } as Profile;
+        const rawData = doc.data();
+        const userData: Profile = { 
+          uid: doc.id,
+          email: rawData.email || '',
+          name: rawData.name || '',
+          college: rawData.college || '',
+          passion: rawData.passion || '',
+          aboutMe: rawData.aboutMe || '',
+          profilePhotoUrl: rawData.profilePhotoUrl || '', // Ensure it's never null
+          bannerPhotoUrl: rawData.bannerPhotoUrl || '',
+          skills: rawData.skills || [],
+          interests: rawData.interests || [],
+          followers: rawData.followers || 0,
+          following: rawData.following || 0,
+          connections: rawData.connections || 0,
+          isVerified: rawData.isVerified || false,
+          verifiedBadge: rawData.verifiedBadge || 'none',
+          location: rawData.location || '',
+          joinedDate: rawData.joinedDate?.toDate() || new Date(),
+          createdAt: rawData.createdAt?.toDate() || new Date(),
+          updatedAt: rawData.updatedAt?.toDate() || new Date(),
+          pushToken: rawData.pushToken || '',
+          socialLinks: rawData.socialLinks || [],
+          aiApiKey: rawData.aiApiKey || '',
+          personality: rawData.personality || 'ambivert',
+          xp: rawData.xp || 0,
+          level: rawData.level || 1,
+          badges: rawData.badges || [],
+          lastLoginDate: rawData.lastLoginDate?.toDate() || new Date(),
+          loginStreak: rawData.loginStreak || 0,
+          lastActivityAt: rawData.lastActivityAt?.toDate() || new Date(),
+          lastDecayAppliedAt: rawData.lastDecayAppliedAt?.toDate() || new Date(),
+          streakCount: rawData.streakCount || 0,
+          lastStreakWindowStart: rawData.lastStreakWindowStart || '',
+          timezone: rawData.timezone || 'Asia/Kolkata',
+          banners: rawData.banners || []
+        };
         console.log(`Processing user: ${userData.name} (UID: ${userData.uid})`);
         // Filter out the current user
         if (userData.uid !== user?.uid) {
@@ -111,12 +146,21 @@ const FindPeopleScreen: React.FC = () => {
         }
       });
       
-      // Filter out anonymous/unknown/incomplete profiles
+      // Filter out anonymous/unknown/incomplete profiles and ensure all required fields exist
       const visibleUsers = usersData.filter((u) => {
+        // Ensure user object exists and has required fields
+        if (!u || !u.uid || !u.name) return false;
+        
         const name = (u.name || '').toString().trim();
         if (!name || name.length < 2) return false;
         const lower = name.toLowerCase();
         if (lower === 'anonymous' || lower === 'unknown' || lower === 'user') return false;
+        
+        // Ensure profilePhotoUrl is never null
+        if (u.profilePhotoUrl === null || u.profilePhotoUrl === undefined) {
+          u.profilePhotoUrl = '';
+        }
+        
         return true;
       });
       console.log(`Loaded ${visibleUsers.length} visible users from database (excluding current and anonymous)`);
@@ -188,7 +232,7 @@ const FindPeopleScreen: React.FC = () => {
       await SearchHistoryService.addToRecentlyViewed(user.uid, {
         userId: userProfile.uid,
         name: userProfile.name,
-        profilePhotoUrl: userProfile.profilePhotoUrl,
+        profilePhotoUrl: userProfile.profilePhotoUrl || '',
         college: userProfile.college,
       });
       // Reload recently viewed
@@ -207,7 +251,7 @@ const FindPeopleScreen: React.FC = () => {
       await SearchHistoryService.addToRecentlyViewed(user.uid, {
         userId: viewedProfile.userId,
         name: viewedProfile.name,
-        profilePhotoUrl: viewedProfile.profilePhotoUrl,
+        profilePhotoUrl: viewedProfile.profilePhotoUrl || '',
         college: viewedProfile.college,
       });
       // Reload recently viewed
@@ -533,7 +577,48 @@ const FindPeopleScreen: React.FC = () => {
     </TouchableOpacity>
   );
 
-  if (loading) {
+  const renderSkeletonLoading = () => (
+    <View style={styles.container}>
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchInputContainer}>
+          <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
+          <View style={styles.searchInputSkeleton} />
+        </View>
+      </View>
+
+      {/* Recently Viewed Section */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Recently Viewed</Text>
+      </View>
+      <FlatList
+        horizontal
+        data={[1, 2, 3, 4]} // Render 4 skeleton items
+        renderItem={() => <UserCardSkeleton />}
+        keyExtractor={(item) => `skeleton-recent-${item}`}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.recentlyViewedContainer}
+      />
+
+      {/* All Creators Section */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>All Creators</Text>
+      </View>
+      <FlatList
+        data={[1, 2, 3, 4, 5, 6]} // Render 6 skeleton items
+        renderItem={() => <UserCardSkeleton />}
+        keyExtractor={(item) => `skeleton-user-${item}`}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.usersList}
+      />
+    </View>
+  );
+
+  if (loading && !isOffline) {
+    return renderSkeletonLoading();
+  }
+
+  if (loading && isOffline) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
@@ -576,7 +661,7 @@ const FindPeopleScreen: React.FC = () => {
       <FlatList
         data={filteredUsers}
         renderItem={renderUserItem}
-        keyExtractor={(item) => item.id || item.uid}
+        keyExtractor={(item) => item.uid || item.email || 'unknown'}
         contentContainerStyle={styles.listContainer}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -956,6 +1041,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingRight: 16,
     alignItems: 'stretch',
+  },
+  searchInputSkeleton: {
+    flex: 1,
+    height: 40,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 8,
+    marginLeft: 8,
   },
 });
 
