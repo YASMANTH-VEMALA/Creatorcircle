@@ -5,7 +5,6 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useScroll } from '../contexts/ScrollContext';
-import NotificationIndicator from './NotificationIndicator';
 
 const AnimatedTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation }) => {
   const translateY = useRef(new Animated.Value(0)).current;
@@ -159,9 +158,6 @@ const AnimatedTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navig
                 size={24}
                 color={isFocused ? '#007AFF' : '#8E8E93'}
               />
-              {route.name === 'More' && (
-                <NotificationIndicator size="small" showCount={false} />
-              )}
             </View>
             <Text style={[styles.label, { color: isFocused ? '#007AFF' : '#8E8E93' }]}>
               {typeof label === 'string' ? label : route.name}

@@ -171,13 +171,12 @@ const UserProfileScreen: React.FC = () => {
         console.log('User not found in Firestore, creating fallback profile');
         // Create a fallback profile with basic information
         const fallbackProfile: Profile = {
-          id: userId,
           uid: userId,
-          name: userName || 'Unknown User',
           email: '',
+          name: userName || 'Unknown User',
           college: 'Unknown College',
           passion: '',
-          about: '',
+          aboutMe: '',
           profilePhotoUrl: '',
           bannerPhotoUrl: '',
           skills: [],
@@ -188,6 +187,8 @@ const UserProfileScreen: React.FC = () => {
           isVerified: false,
           location: '',
           joinedDate: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
         };
         
         setProfile(fallbackProfile);

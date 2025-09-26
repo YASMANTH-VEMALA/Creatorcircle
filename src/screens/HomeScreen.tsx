@@ -15,6 +15,7 @@ import { Post } from '../types';
 import { PostService } from '../services/postService';
 import PostCard from '../components/PostCard';
 import NotificationIndicator from '../components/NotificationIndicator';
+import MessageIndicator from '../components/MessageIndicator';
 import { useNavigation } from '@react-navigation/native';
 import { ProfileValidationService } from '../services/profileValidationService';
 import CreatorCircleLoading from '../components/CreatorCircleLoading';
@@ -22,36 +23,69 @@ import { FirebaseUtils } from '../utils/firebaseUtils';
 import { RealtimeMigrationService } from '../services/realtimeMigrationService';
 import { useScroll } from '../contexts/ScrollContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useNetwork } from '../contexts/NetworkContext';
+import { OfflineService } from '../services/offlineService';
 import PremiumFeatureModal from '../components/PremiumFeatureModal';
+import PostCardSkeleton from '../components/skeletons/PostCardSkeleton';
 
 const HomeScreen: React.FC = () => {
   const { user } = useAuth();
   const navigation = useNavigation();
   const { notifyScroll } = useScroll();
   const { colors } = useTheme();
+  const { isOffline } = useNetwork();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [cachedPosts, setCachedPosts] = useState<Post[]>([]);
 
   useEffect(() => {
-    loadPosts();
-    testFirebaseConnection();
-    startRealtimeMonitoring();
+    loadCachedPosts();
+    let unsubscribe: (() => void) | undefined;
+    
+    if (!isOffline) {
+      testFirebaseConnection();
+      startRealtimeMonitoring();
+      unsubscribe = setupPostsSubscription();
+    } else {
+      // If offline, show cached posts immediately
+      setLoading(false);
+    }
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [isOffline, loadCachedPosts, setupPostsSubscription]);
+
+  const loadCachedPosts = useCallback(async () => {
+    try {
+      const cached = await OfflineService.getCachedPosts();
+      if (cached && cached.length > 0) {
+        setCachedPosts(cached);
+        console.log(`📱 Loaded ${cached.length} cached posts`);
+      }
+    } catch (error) {
+      console.error('❌ Error loading cached posts:', error);
+    }
   }, []);
 
-  const loadPosts = useCallback(() => {
-    console.log('📱 Loading posts...');
-    
+  const setupPostsSubscription = useCallback(() => {
     try {
       const unsubscribe = PostService.subscribeToPosts((loadedPosts) => {
         try {
           console.log(`Posts loaded in HomeScreen: ${loadedPosts.length}`);
           setPosts(loadedPosts);
           setLoading(false);
+          
+          // Cache posts for offline use
+          OfflineService.cachePosts(loadedPosts).catch(error => {
+            console.error('❌ Error caching posts:', error);
+          });
         } catch (error) {
           console.error('❌ Error processing loaded posts:', error);
-          setPosts([]);
           setLoading(false);
         }
       });
@@ -59,7 +93,6 @@ const HomeScreen: React.FC = () => {
       return unsubscribe;
     } catch (error) {
       console.error('❌ Error setting up posts subscription:', error);
-      setPosts([]);
       setLoading(false);
       return () => {};
     }
@@ -90,7 +123,15 @@ const HomeScreen: React.FC = () => {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
+    if (isOffline) {
+      // If offline, just reload cached posts
+      await loadCachedPosts();
+    } else {
+      // If online, the subscription will automatically update
+      // Just wait a bit for the refresh to feel natural
+      setTimeout(() => setRefreshing(false), 1000);
+    }
+    setRefreshing(false);
   };
 
   // Create post functionality moved to PostScreen
@@ -145,6 +186,58 @@ const HomeScreen: React.FC = () => {
     </View>
   );
 
+  const renderOfflineEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      <Ionicons name="wifi-outline" size={64} color="#ccc" />
+      <Text style={styles.emptyTitle}>You're offline</Text>
+      <Text style={styles.emptySubtitle}>
+        No cached posts available. Connect to the internet to see the latest content.
+      </Text>
+    </View>
+  );
+
+  const renderSkeletonLoading = () => (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <View style={styles.headerLeft}>
+          <Text style={styles.headerTitle}>
+            <Text style={[styles.creatorText, { color: colors.text }]}>Creator</Text>
+            <Text style={[styles.circleText, { color: colors.secondary }]}>Circle</Text>
+          </Text>
+        </View>
+        <View style={styles.headerRight}>
+          <View style={[styles.headerButton, { 
+            backgroundColor: colors.glassBackground,
+            borderWidth: 1,
+            borderColor: colors.glassBorder,
+          }]} />
+          <View style={[styles.headerButton, { 
+            backgroundColor: colors.glassBackground,
+            borderWidth: 1,
+            borderColor: colors.glassBorder,
+          }]} />
+          <View style={[styles.headerButton, { 
+            backgroundColor: colors.glassBackground,
+            borderWidth: 1,
+            borderColor: colors.glassBorder,
+          }]} />
+        </View>
+      </View>
+
+      {/* Skeleton Posts */}
+      <FlatList
+        data={[1, 2, 3, 4, 5]} // Render 5 skeleton items
+        renderItem={() => <PostCardSkeleton />}
+        keyExtractor={(item) => `skeleton-${item}`}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.postsList}
+        style={styles.flatList}
+        scrollEventThrottle={16}
+      />
+    </View>
+  );
+
   const renderLoadingState = () => (
     <View style={styles.loadingContainer}>
       <CreatorCircleLoading />
@@ -152,7 +245,13 @@ const HomeScreen: React.FC = () => {
     </View>
   );
 
-  if (loading) {
+  // Show skeleton loading for initial load or when offline and no cached data
+  if (loading && !isOffline) {
+    return renderSkeletonLoading();
+  }
+
+  // Show loading screen only for very initial app load
+  if (loading && isOffline && cachedPosts.length === 0) {
     return renderLoadingState();
   }
 
@@ -182,7 +281,10 @@ const HomeScreen: React.FC = () => {
             borderWidth: 1,
             borderColor: colors.glassBorder,
           }]} onPress={handleMessage}>
-            <Ionicons name="chatbubbles-outline" size={24} color={colors.primary} />
+            <View style={styles.messageContainer}>
+              <Ionicons name="chatbubbles-outline" size={24} color={colors.primary} />
+              <MessageIndicator size="small" showCount={false} />
+            </View>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.headerButton, { 
             backgroundColor: colors.glassBackground,
@@ -199,14 +301,18 @@ const HomeScreen: React.FC = () => {
 
       {/* Posts List */}
       <FlatList
-        data={posts}
+        data={isOffline ? cachedPosts : posts}
         renderItem={renderPost}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            enabled={!isOffline} // Disable refresh when offline
+          />
         }
-        ListEmptyComponent={renderEmptyState}
+        ListEmptyComponent={isOffline ? renderOfflineEmptyState : renderEmptyState}
         contentContainerStyle={styles.postsList}
         style={styles.flatList}
         onScroll={(event) => {
@@ -269,6 +375,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   notificationContainer: {
+    position: 'relative',
+  },
+  messageContainer: {
     position: 'relative',
   },
   flatList: {

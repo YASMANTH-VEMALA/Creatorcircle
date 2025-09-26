@@ -64,9 +64,12 @@ export class SearchHistoryService {
         const data = historyDoc.data();
         const recentlyViewed = data.recentlyViewed || [];
         
-        // Convert Firestore timestamps to Date objects
+        // Convert Firestore timestamps to Date objects and add null checks
         return recentlyViewed.map((profile: any) => ({
-          ...profile,
+          userId: profile.userId || '',
+          name: profile.name || 'Unknown User',
+          profilePhotoUrl: profile.profilePhotoUrl || '',
+          college: profile.college || 'Unknown College',
           viewedAt: profile.viewedAt?.toDate ? profile.viewedAt.toDate() : new Date(profile.viewedAt?.seconds * 1000 || Date.now()),
         }));
       }

@@ -13,7 +13,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { UserService } from '../services/userService';
 import { Avatar } from '../components/ui/Avatar';
-import NotificationIndicator from '../components/NotificationIndicator';
 
 const MoreScreen: React.FC = () => {
   const { user, logout } = useAuth();
@@ -32,16 +31,8 @@ const MoreScreen: React.FC = () => {
     );
   };
 
-  const handleMessages = () => {
-    navigation.navigate('MessagesList' as never);
-  };
-
   const handleCollaborationRequests = () => {
     navigation.navigate('CollaborationRequests' as never);
-  };
-
-  const handleNotifications = () => {
-    navigation.navigate('Notifications' as never);
   };
 
 
@@ -108,13 +99,6 @@ const MoreScreen: React.FC = () => {
         <Text style={styles.sectionHeader}>General</Text>
         <View style={styles.optionsSection}>
           <OptionItem icon="log-out-outline" label="Logout" onPress={handleLogout} iconColor="#FF3B30" labelColor="#FF3B30" />
-          <OptionItem icon="chatbubbles-outline" label="Messages" onPress={handleMessages} />
-          <OptionItem
-            icon="notifications-outline"
-            label="Notifications"
-            onPress={handleNotifications}
-            rightElement={<NotificationIndicator size="small" showCount={false} />}
-          />
           <OptionItem icon="settings-outline" label="Settings" onPress={() => navigation.navigate('Settings' as never)} />
           <OptionItem icon="sparkles" label="AI Assistant" onPress={() => navigation.navigate('AIAssistant' as never)} iconColor="#FF6B35" />
           <OptionItem icon="location-outline" label="Location Settings" onPress={() => navigation.navigate('LocationSettings' as never)} />
