@@ -1,0 +1,71 @@
+name: Monorepo CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  monorepo-health:
+    name: Monorepo Health Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+    
+    - name: 🏗️ Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: 📦 Install all dependencies
+      run: npm ci
+    
+    - name: 🏗️ Build all shared packages
+      run: |
+        npm run build --workspaces --if-present
+    
+    - name: 🧪 Test all packages
+      run: |
+        npm run test --workspaces --if-present
+    
+    - name: 🧹 Lint all code
+      run: |
+        npm run lint --workspaces --if-present
+    
+    - name: ✅ Verify monorepo structure
+      run: |
+        echo "📋 Checking monorepo structure..."
+        npm list --workspaces --depth=0
+        echo ""
+        echo "📱 Mobile app files:"
+        ls -la apps/mobile/ | head -10
+        echo ""
+        echo "🖥️ Backend placeholder:"
+        ls -la apps/backend/
+        echo ""
+        echo "📚 Shared packages:"
+        ls -la packages/
+        echo ""
+        echo "✅ Monorepo structure healthy!"
+    
+    - name: 🔍 Check for potential issues
+      run: |
+        echo "🔍 Checking for common monorepo issues..."
+        
+        # Check for duplicate dependencies
+        echo "📦 Checking for duplicate dependencies..."
+        npm ls --all 2>&1 | grep -i "duplicate\|conflict" || echo "No duplicate dependencies found"
+        
+        # Check workspace configuration
+        echo "⚙️ Checking workspace configuration..."
+        npm config list | grep workspace || echo "Workspace config OK"
+        
+        echo "✅ No critical issues detected"

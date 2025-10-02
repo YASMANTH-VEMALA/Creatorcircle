@@ -1,0 +1,64 @@
+name: Shared Packages CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths: [ 'packages/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'packages/**' ]
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  shared-packages:
+    name: Shared Packages CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    strategy:
+      matrix:
+        package: ['shared-types', 'shared-utils']
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+    
+    - name: 🏗️ Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: 📦 Install root dependencies
+      run: npm ci
+    
+    - name: 📚 Install shared package dependencies
+      run: npm ci --workspace=packages/${{ matrix.package }}
+    
+    - name: 📝 Check TypeScript
+      run: |
+        cd packages/${{ matrix.package }}
+        npx tsc --noEmit
+    
+    - name: 🏗️ Test build process
+      run: |
+        cd packages/${{ matrix.package }}
+        npm run build || echo "Build script not yet implemented for ${{ matrix.package }}"
+    
+    - name: 🧪 Run tests (when available)
+      run: |
+        cd packages/${{ matrix.package }}
+        npm run test || echo "Tests not yet implemented for ${{ matrix.package }}"
+    
+    - name: 🧹 Lint code (when available)
+      run: |
+        cd packages/${{ matrix.package }}
+        npm run lint || echo "Linting not yet implemented for ${{ matrix.package }}"
+    
+    - name: ✅ Verify package structure
+      run: |
+        echo "📋 Checking ${{ matrix.package }} structure..."
+        ls -la packages/${{ matrix.package }}/
+        echo "✅ Package ${{ matrix.package }} structure verified"

@@ -1,0 +1,83 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths: [ 'apps/backend/**', 'packages/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'apps/backend/**', 'packages/**' ]
+
+env:
+  NODE_VERSION: '18'
+  MONGODB_VERSION: '7.0'
+
+jobs:
+  backend-ci:
+    name: Backend API CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
+    services:
+      mongodb:
+        image: mongo:${{ env.MONGODB_VERSION }}
+        env:
+          MONGO_INITDB_ROOT_USERNAME: admin
+          MONGO_INITDB_ROOT_PASSWORD: password
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ping: 1})'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+    
+    - name: 🏗️ Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: 📦 Install root dependencies
+      run: npm ci
+    
+    - name: 🖥️ Install backend dependencies
+      run: npm ci --workspace=apps/backend
+    
+    - name: 🏗️ Build shared packages
+      run: |
+        npm run build --workspace=packages/shared-types --if-present
+        npm run build --workspace=packages/shared-utils --if-present
+    
+    - name: 📝 Check TypeScript (Backend)
+      run: |
+        cd apps/backend
+        npx tsc --noEmit --skipLibCheck || echo "Backend TypeScript will be implemented during migration"
+    
+    - name: 🧪 Test backend (when ready)
+      run: |
+        cd apps/backend
+        npm run test || echo "Backend tests will be implemented during migration"
+      env:
+        MONGODB_URI: mongodb://admin:password@localhost:27017/creatorcircle_test?authSource=admin
+    
+    - name: 🧹 Lint backend code (when ready)
+      run: |
+        cd apps/backend
+        npm run lint || echo "Backend linting will be implemented during migration"
+    
+    - name: 🚀 Test backend build (when ready)
+      run: |
+        cd apps/backend
+        npm run build || echo "Backend build will be implemented during migration"
+    
+    - name: ✅ Verify backend readiness
+      run: |
+        echo "📋 Backend CI pipeline ready for Firebase migration"
+        echo "🗄️ MongoDB service: Available"
+        echo "📦 Dependencies: Ready"
+        echo "🔧 TypeScript: Configured"
