@@ -8,7 +8,7 @@ interface AIButtonProps {
   hasContent?: boolean;
 }
 
-export const AIButton: React.FC<AIButtonProps> = ({ onPress, disabled = false, hasContent = false }) => {
+export const AIButton:  React.FC<AIButtonProps> = ({ onPress, disabled = false, hasContent = false }) => {
   const iconName = hasContent ? "pencil" : "add";
   const iconColor = disabled ? "#999" : "#007AFF";
   
