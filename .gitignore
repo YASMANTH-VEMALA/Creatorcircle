@@ -1,15 +1,27 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+# CreatorCircle Monorepo .gitignore
 
-# dependencies
+# Dependencies
 node_modules/
+*/node_modules/
+**/node_modules/
 
-# Expo
-.expo/
+# Build outputs
 dist/
-web-build/
-expo-env.d.ts
+build/
+*/dist/
+*/build/
+**/dist/
+**/build/
 
-# Native
+# Expo (Mobile App)
+.expo/
+apps/mobile/.expo/
+web-build/
+apps/mobile/web-build/
+expo-env.d.ts
+apps/mobile/expo-env.d.ts
+
+# Native builds
 .kotlin/
 *.orig.*
 *.jks
@@ -17,24 +29,87 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
+apps/mobile/android/app/build/
+apps/mobile/ios/build/
 
 # Metro
 .metro-health-check*
 
-# debug
+# Environment variables
+.env
+.env.local
+.env.production
+.env.development
+.env.*.local
+apps/*/.env
+apps/*/.env.local
+packages/*/.env
+
+# Logs
+*.log
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+logs/
+*/logs/
 
-# macOS
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 *.pem
 
-# local env files
-.env
-.env.local
-.env.*.local
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
 
-# typescript
+# TypeScript
 *.tsbuildinfo
-.env.local
+.tsbuildinfo
+
+# Testing
+coverage/
+*/coverage/
+.nyc_output/
+*/.nyc_output/
+
+# Backend specific (for future)
+apps/backend/uploads/
+apps/backend/logs/
+apps/backend/.env
+apps/backend/dist/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Package manager files
+package-lock.json.backup
+yarn.lock
+pnpm-lock.yaml
+
+# Backup files
+*.backup
+*.bak
+
+# Local development
+.local/
+.cache/
+
+# Shared packages build artifacts
+packages/*/dist/
+packages/*/build/
+
+# Tools and scripts temporary files
+tools/temp/
+tools/logs/

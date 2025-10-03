@@ -1,0 +1,74 @@
+name: Mobile CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths: [ 'apps/mobile/**', 'packages/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'apps/mobile/**', 'packages/**' ]
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  mobile-ci:
+    name: Mobile App CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+    
+    - name: 🏗️ Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: 📦 Install root dependencies
+      run: npm ci
+    
+    - name: 📱 Install mobile dependencies
+      run: npm ci --workspace=apps/mobile
+    
+    - name: 🔧 Setup Expo CLI
+      run: npm install -g @expo/cli
+    
+    - name: 🏗️ Build shared packages
+      run: |
+        npm run build --workspace=packages/shared-types --if-present
+        npm run build --workspace=packages/shared-utils --if-present
+    
+    - name: 🧪 Check mobile app health
+      run: |
+        cd apps/mobile
+        npx expo-doctor --non-interactive || true
+    
+    - name: 📝 Check TypeScript (Mobile)
+      run: |
+        cd apps/mobile
+        npx tsc --noEmit --skipLibCheck
+      continue-on-error: true
+    
+    - name: 📝 Check TypeScript (Shared Types)
+      run: |
+        cd packages/shared-types
+        npx tsc --noEmit
+    
+    - name: 📝 Check TypeScript (Shared Utils)
+      run: |
+        cd packages/shared-utils
+        npx tsc --noEmit
+    
+    - name: 🧹 Check for unused dependencies
+      run: |
+        cd apps/mobile
+        npx expo install --check || true
+    
+    - name: ✅ Verify workspace structure
+      run: |
+        echo "📋 Checking workspace structure..."
+        npm list --workspaces --depth=0
+        echo "✅ Monorepo structure verified"

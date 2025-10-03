@@ -1,0 +1,13 @@
+{
+    "name": "@creatorcircle/shared-utils",
+    "version": "1.0.0",
+    "main": "src/index.ts",
+    "scripts": {
+        "build": "echo 'No build needed yet - using TypeScript directly'",
+        "clean": "echo 'Nothing to clean yet'"
+    },
+    "devDependencies": {
+        "typescript": "^5.3.0"
+    },
+    "private": true
+}

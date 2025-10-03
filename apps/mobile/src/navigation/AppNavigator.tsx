@@ -73,7 +73,7 @@ const AppNavigator = () => {
   return (
     <ScrollProvider>
       <NavigationContainer ref={navigationRef}>
-        <Stack.Navigator screenOptions={{ 
+        <Stack.Navigator screenOptions={{
           headerShown: false,
           cardStyle: { backgroundColor: 'transparent' },
           cardStyleInterpolator: ({ current }) => ({
@@ -87,19 +87,19 @@ const AppNavigator = () => {
               <Stack.Screen name="Main" component={MainTabNavigator} />
               <Stack.Screen name="Spotlight" component={SpotlightScreen} />
               <Stack.Screen name="CreateSpotlight" component={CreateSpotlightScreen} />
-                              <Stack.Screen name="UserProfile" component={UserProfileScreen} />
-                <Stack.Screen name="PostView" component={PostViewScreen} />
-                <Stack.Screen 
-                  name="MessagesList" 
-                  component={MessagesListScreen}
-                  options={{ title: 'Messages' }}
-                />
-                <Stack.Screen 
-                  name="ChatWindow" 
-                  component={ChatWindowScreen}
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen name="CollaborationRequests" component={CollaborationRequestsScreen} />
+              <Stack.Screen name="UserProfile" component={UserProfileScreen} />
+              <Stack.Screen name="PostView" component={PostViewScreen} />
+              <Stack.Screen
+                name="MessagesList"
+                component={MessagesListScreen}
+                options={{ title: 'Messages' }}
+              />
+              <Stack.Screen
+                name="ChatWindow"
+                component={ChatWindowScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen name="CollaborationRequests" component={CollaborationRequestsScreen} />
               <Stack.Screen name="Notifications" component={NotificationsScreen} />
               <Stack.Screen name="PlatformTest" component={PlatformCompatibilityTest} />
               <Stack.Screen name="AvatarDemo" component={AvatarDemo} />

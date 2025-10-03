@@ -1,5 +1,6 @@
 // API Keys Configuration
 // Add your actual API keys here
+import Constants from 'expo-constants';
 
 export const API_KEY = {
   PERPLEXITY_API_KEY: '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',

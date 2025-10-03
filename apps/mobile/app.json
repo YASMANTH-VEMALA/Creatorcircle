@@ -81,7 +81,8 @@
     "extra": {
       "eas": {
         "projectId": "2e7483c9-5177-454f-90aa-c9256c1ff52f"
-      }
+      },
+      "PERPLEXITY_API_KEY": "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"
     },
     "owner": "yasmanthvemala"
   }

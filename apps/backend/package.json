@@ -1,0 +1,15 @@
+{
+    "name": "@creatorcircle/backend",
+    "version": "1.0.0",
+    "main": "src/server.js",
+    "scripts": {
+        "dev": "echo 'Backend development will be set up during migration'",
+        "build": "echo 'Backend build will be set up during migration'",
+        "start": "echo 'Backend start will be set up during migration'",
+        "test": "echo 'Backend tests will be set up during migration'",
+        "clean": "echo 'Nothing to clean yet'"
+    },
+    "dependencies": {},
+    "devDependencies": {},
+    "private": true
+}
