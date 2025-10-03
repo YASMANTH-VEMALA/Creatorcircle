@@ -1,0 +1,60 @@
+{
+    "compilerOptions": {
+        "target": "ES2020",
+        "module": "commonjs",
+        "lib": [
+            "ES2020"
+        ],
+        "outDir": "./dist",
+        "rootDir": "./src",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "allowSyntheticDefaultImports": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "composite": true,
+        "declaration": true,
+        "sourceMap": true,
+        "baseUrl": ".",
+        "paths": {
+            "@creatorcircle/shared-types": [
+                "../../packages/shared-types/src"
+            ],
+            "@creatorcircle/shared-utils": [
+                "../../packages/shared-utils/src"
+            ],
+            "@/*": [
+                "./src/*"
+            ]
+        },
+        "types": [
+            "node",
+            "jest"
+        ]
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist",
+        "**/*.test.ts",
+        "**/*.spec.ts"
+    ],
+    "references": [
+        {
+            "path": "../../packages/shared-types"
+        },
+        {
+            "path": "../../packages/shared-utils"
+        }
+    ],
+    "ts-node": {
+        "esm": false,
+        "experimentalSpecifierResolution": "node"
+    }
+}
